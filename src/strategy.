@@ -1,0 +1,88 @@
+def moving_average(prices):
+    return sum(prices) / len(prices)
+
+
+def calculate_rsi(prices, period=5):
+    if len(prices) < period + 1:
+        return 50.0
+
+    gains = []
+    losses = []
+
+    for i in range(len(prices) - period, len(prices)):
+        change = prices[i] - prices[i - 1]
+
+        if change > 0:
+            gains.append(change)
+            losses.append(0)
+        else:
+            gains.append(0)
+            losses.append(abs(change))
+
+    average_gain = sum(gains) / period
+    average_loss = sum(losses) / period
+
+    if average_loss == 0:
+        return 100.0
+
+    rs = average_gain / average_loss
+
+    return 100 - (100 / (1 + rs))
+
+
+def trend_strength(prices):
+    if len(prices) < 10:
+        return 0.0
+
+    recent = prices[-5:]
+    older = prices[-10:-5]
+
+    recent_average = moving_average(recent)
+    older_average = moving_average(older)
+
+    return abs(recent_average - older_average)
+
+
+def generate_signal(prices):
+    if len(prices) < 10:
+        return "HOLD"
+
+    short_ma = moving_average(prices[-3:])
+    long_ma = moving_average(prices[-5:])
+
+    rsi = calculate_rsi(prices)
+    strength = trend_strength(prices)
+
+    minimum_strength = 0.0003
+
+    if strength < minimum_strength:
+        return "HOLD"
+
+    if short_ma > long_ma and rsi < 80:
+        return "BUY"
+
+    if short_ma < long_ma and rsi > 30:
+        return "SELL"
+
+    return "HOLD"
+
+
+if __name__ == "__main__":
+    print("Trend-filtered Day-Trading Strategy")
+
+    prices = [ 
+    1.1000,
+    1.1004,
+    1.1002,
+    1.1007,
+    1.1005,
+    1.1010,
+    1.1008,
+    1.1013,
+    1.1011,
+    1.1016]
+
+    print(f"RSI: {calculate_rsi(prices):.2f}")
+    print(f"Trend strength: {trend_strength(prices):.5f}")
+    print(f"Signal: {generate_signal(prices)}")
+
